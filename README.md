@@ -19,6 +19,8 @@ subir fotos, marcar dónde encontrarlos en un mapa del mundo, y mucho más.
 - 📅 **Eventos de cata**: crea encuentros e invita amigos.
 - 📱 **Compartir** productos en **WhatsApp** y redes sociales.
 - 🤝 **Invitar amigos** a tu caseta.
+- 🏪 **Tiendas con catálogo**: marca tu perfil como tienda y todos tus productos
+  forman un **catálogo compartible** por WhatsApp.
 - 👥 **Comunidad**: sigue a otras personas (haz amigos) y ve **qué califican y opinan**.
 - 💬 **Varias opiniones por producto**: cada producto muestra todas las reseñas,
   su promedio de estrellas, y resalta cuando **un amigo opinó**.

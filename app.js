@@ -49,6 +49,7 @@ let amigos = leer(ALMACEN.amigos, []); // nombres de personas que sigues
 // sola opinión) se convierten al formato nuevo aquí.
 function migrarProductos() {
   let cambio = false;
+  const tiendasEjemplo = { 1: "Panadería La Esquina", 2: "Café El Roble" };
   productos.forEach((p) => {
     if (!Array.isArray(p.opiniones)) {
       p.opiniones = [{
@@ -57,6 +58,10 @@ function migrarProductos() {
         texto: p.opinion || "",
         fecha: p.fecha,
       }];
+      cambio = true;
+    }
+    if (p.tienda === undefined) {
+      p.tienda = tiendasEjemplo[p.id] || null;
       cambio = true;
     }
   });
@@ -79,6 +84,7 @@ function esAmigo(nombre) {
 let tabActual = "todos";
 let miUbicacion = null; // {lat, lng} cuando el usuario comparte ubicación
 let guiaSeleccionada = null; // id de la guía abierta en "Notas de interés"
+let tiendaSeleccionada = null; // nombre de la tienda abierta en "Tiendas"
 
 // ================= Guías / Notas de interés =================
 // Colecciones curadas. Cada producto entra a una guía si su nombre o
@@ -222,6 +228,14 @@ function distanciaKm(a, b) {
 
 // ================= Perfil de usuario =================
 function abrirPerfil() {
+  // Pre-llena el formulario si ya tienes perfil
+  if (usuario) {
+    const f = document.getElementById("form-perfil");
+    f.nombre.value = usuario.nombre || "";
+    f.caseta.value = usuario.caseta || "";
+    f.esTienda.checked = !!usuario.esTienda;
+    f.tiendaDesc.value = usuario.tiendaDesc || "";
+  }
   modalPerfil.classList.remove("oculto");
 }
 function pintarPerfil() {
@@ -239,6 +253,8 @@ document.getElementById("form-perfil").addEventListener("submit", (e) => {
   usuario = {
     nombre: datos.get("nombre"),
     caseta: datos.get("caseta") || (datos.get("nombre") + "'s"),
+    esTienda: datos.get("esTienda") === "on",
+    tiendaDesc: datos.get("tiendaDesc") || "",
   };
   escribir(ALMACEN.usuario, usuario);
   modalPerfil.classList.add("oculto");
@@ -269,6 +285,7 @@ form.addEventListener("submit", async (e) => {
     ubicacion: ubicacionElegida,
     foto: foto,
     autor: autor,
+    tienda: usuario && usuario.esTienda ? usuario.caseta : null,
     linkCompra: datos.get("linkCompra") === "on",
     envio: datos.get("envio") === "on",
     patrocinado: datos.get("patrocinado") === "on",
@@ -510,6 +527,78 @@ window.agregarOpinion = function (id) {
   render();
 };
 
+// ================= Tiendas / Catálogos =================
+// Información extra de tiendas de demostración. Con un servidor real, cada
+// tienda tendría su propio perfil guardado.
+const TIENDAS_META = {
+  "Panadería La Esquina": { emoji: "🥐", desc: "Pan y postres artesanales en Bogotá" },
+  "Café El Roble": { emoji: "☕", desc: "Café de origen, finca propia" },
+};
+
+// Construye la lista de tiendas a partir de los productos que tienen tienda
+function listaTiendas() {
+  const nombres = [...new Set(productos.filter((p) => p.tienda).map((p) => p.tienda))];
+  return nombres.map((n) => {
+    const meta = TIENDAS_META[n];
+    const esMia = usuario && usuario.esTienda && usuario.caseta === n;
+    return {
+      nombre: n,
+      emoji: meta ? meta.emoji : "🏪",
+      desc: meta ? meta.desc : (esMia ? usuario.tiendaDesc : ""),
+      productos: productos.filter((p) => p.tienda === n),
+    };
+  });
+}
+
+function dibujarTiendas() {
+  const tiendas = listaTiendas();
+  const intro = `<div class="ayuda" style="padding:0.4rem 0.6rem">
+    Catálogos de tiendas. ${usuario && usuario.esTienda
+      ? "Tu tienda aparece aquí 🎉"
+      : "¿Tienes una tienda? Actívala en tu perfil 👤 y crea tu catálogo."}
+  </div>`;
+  if (!tiendas.length) {
+    lista.innerHTML = intro + `<div class="vacio">Aún no hay tiendas. ¡Crea la tuya desde tu perfil! 🏪</div>`;
+    return;
+  }
+  lista.innerHTML = intro + `<div class="guias-grid">` +
+    tiendas.map((t) => `
+      <div class="guia-card" onclick="abrirTienda('${escapar(t.nombre)}')">
+        <div class="emoji">${t.emoji}</div>
+        <h3>${escapar(t.nombre)}</h3>
+        <div class="conteo">${t.productos.length} producto${t.productos.length === 1 ? "" : "s"}</div>
+      </div>`).join("") + `</div>`;
+}
+
+window.abrirTienda = function (nombre) {
+  tiendaSeleccionada = nombre;
+  render();
+};
+// Ir al catálogo de una tienda desde la ficha de un producto
+window.irATienda = function (nombre) {
+  cerrarModal();
+  tabActual = "tiendas";
+  tiendaSeleccionada = nombre;
+  guiaSeleccionada = null;
+  document.querySelectorAll(".tab[data-tab]").forEach((x) =>
+    x.classList.toggle("activa", x.dataset.tab === "tiendas")
+  );
+  render();
+};
+window.volverATiendas = function () {
+  tiendaSeleccionada = null;
+  render();
+};
+window.compartirCatalogo = function (nombre) {
+  const t = listaTiendas().find((x) => x.nombre === nombre);
+  if (!t) return;
+  const lineas = t.productos.map((p) =>
+    `• ${p.nombre}${p.precio != null ? " ($" + p.precio + ")" : ""} ${estrellas(promedio(p))}`
+  );
+  const texto = `🏪 Catálogo de "${nombre}" en Cátalo:\n${lineas.join("\n")}\n\nMíralo aquí: ${location.href}`;
+  window.open("https://wa.me/?text=" + encodeURIComponent(texto), "_blank");
+};
+
 // ================= Pestañas =================
 document.querySelectorAll(".tab[data-tab]").forEach((t) =>
   t.addEventListener("click", async () => {
@@ -517,6 +606,7 @@ document.querySelectorAll(".tab[data-tab]").forEach((t) =>
     t.classList.add("activa");
     tabActual = t.dataset.tab;
     guiaSeleccionada = null;
+    tiendaSeleccionada = null;
     if (tabActual === "cerca" && !miUbicacion) {
       miUbicacion = await pedirUbicacion();
       if (!miUbicacion) alert("No pudimos obtener tu ubicación. Activa el permiso de ubicación en tu navegador.");
@@ -532,6 +622,9 @@ function productosVisibles(filtro) {
   if (tabActual === "guias" && guiaSeleccionada) {
     const guia = GUIAS.find((g) => g.id === guiaSeleccionada);
     lista = guia ? productosDeGuia(guia) : [];
+  }
+  if (tabActual === "tiendas" && tiendaSeleccionada) {
+    lista = lista.filter((p) => p.tienda === tiendaSeleccionada);
   }
   if (tabActual === "favoritos") lista = lista.filter((p) => esFavorito(p.id));
   if (tabActual === "caseta") lista = lista.filter((p) => usuario && p.autor === usuario.nombre);
@@ -564,12 +657,20 @@ function render(filtro = "") {
     caseta: usuario ? `🎪 ${usuario.caseta}` : "🎪 Mi caseta (crea tu usuario)",
     guias: "📌 Notas de interés",
     comunidad: "👥 Comunidad",
+    tiendas: "🏪 Tiendas",
   };
   document.getElementById("lista-titulo").textContent = titulos[tabActual];
 
   // Modo "Comunidad"
   if (tabActual === "comunidad") {
     dibujarComunidad();
+    dibujarMapa(productos);
+    return;
+  }
+
+  // Modo "Tiendas": catálogos de cada tienda
+  if (tabActual === "tiendas" && !tiendaSeleccionada) {
+    dibujarTiendas();
     dibujarMapa(productos);
     return;
   }
@@ -594,6 +695,22 @@ function render(filtro = "") {
       <b>${guia ? guia.emoji + " " + escapar(guia.titulo) : ""}</b>
       <button onclick="rutaDeGuia()">🗺️ Ver ruta</button>`;
     lista.appendChild(barra);
+  }
+
+  // Cabecera del catálogo cuando estás dentro de una tienda
+  if (tabActual === "tiendas" && tiendaSeleccionada) {
+    const t = listaTiendas().find((x) => x.nombre === tiendaSeleccionada);
+    const cab = document.createElement("div");
+    cab.className = "tienda-cabecera";
+    cab.innerHTML = `
+      <div class="nombre"><span class="emoji">${t ? t.emoji : "🏪"}</span>
+        <h3>${escapar(tiendaSeleccionada)}</h3></div>
+      ${t && t.desc ? `<p>${escapar(t.desc)}</p>` : ""}
+      <div class="acciones">
+        <button onclick="volverATiendas()">← Todas las tiendas</button>
+        <button onclick="compartirCatalogo('${escapar(tiendaSeleccionada)}')">📱 Compartir catálogo</button>
+      </div>`;
+    lista.appendChild(cab);
   }
 
   if (visibles.length === 0) {
@@ -621,6 +738,7 @@ function render(filtro = "") {
           <div class="badges">
             ${p.patrocinado ? '<span class="badge patro">⭐ Patrocinado</span>' : ""}
             ${(p.opiniones || []).some((o) => esAmigo(o.autor)) ? '<span class="badge">👥 Amigo opinó</span>' : ""}
+            ${p.tienda ? `<span class="badge">🏪 ${escapar(p.tienda)}</span>` : ""}
             <span class="badge cat">${escapar(p.categoria || "Otro")}</span>
             ${p.dist != null ? `<span class="badge dist">📍 ${p.dist.toFixed(1)} km</span>` : ""}
             ${p.linkCompra ? '<span class="badge">🛒 Comprar</span>' : ""}
@@ -699,7 +817,9 @@ function verDetalle(p) {
     <h2>${escapar(p.nombre)}</h2>
     <div class="estrellas">${estrellas(promedio(p))} <span style="color:#5f6368;font-size:0.9rem">${promedio(p)}/5 · ${numOpiniones(p)} opinión(es)</span></div>
     ${p.precio != null ? `<div class="precio-grande">$${p.precio}</div>` : ""}
-    <div class="bloque"><b>Categoría:</b> ${escapar(p.categoria || "Otro")} · publicado por ${escapar(p.autor || "Anónimo")}</div>
+    <div class="bloque"><b>Categoría:</b> ${escapar(p.categoria || "Otro")} · publicado por ${escapar(p.autor || "Anónimo")}
+      ${p.tienda ? `<br>🏪 <a href="#" onclick="irATienda('${escapar(p.tienda)}');return false;">${escapar(p.tienda)}</a>` : ""}
+    </div>
     <div class="bloque"><b>¿Dónde encontrarlo?</b><br>
       ${p.lugar ? escapar(p.lugar) : "No especificado"}
       ${p.ubicacion ? `<br><small>📍 ${p.ubicacion.lat.toFixed(4)}, ${p.ubicacion.lng.toFixed(4)}</small>` : ""}
@@ -780,6 +900,7 @@ if (productos.length === 0) {
       id: 1, nombre: "Galleta de avena casera", categoria: "Postre",
       precio: 1.5, lugar: "Panadería La Esquina, Bogotá",
       ubicacion: { lat: 4.711, lng: -74.0721 }, foto: null, autor: "Ana",
+      tienda: "Panadería La Esquina",
       linkCompra: true, envio: false, patrocinado: false, fecha: hoy,
       opiniones: [
         { autor: "Ana", calificacion: 5, texto: "Crujiente por fuera, suave por dentro. ¡Deliciosa con café!", fecha: hoy },
@@ -790,6 +911,7 @@ if (productos.length === 0) {
       id: 2, nombre: "Café de origen — tueste medio", categoria: "Bebida",
       precio: 8, lugar: "Finca El Roble",
       ubicacion: { lat: 4.5709, lng: -75.6815 }, foto: null, autor: "Luis",
+      tienda: "Café El Roble",
       linkCompra: false, envio: true, patrocinado: false, fecha: hoy,
       opiniones: [
         { autor: "Luis", calificacion: 4, texto: "Aroma a chocolate y nuez. Muy equilibrado.", fecha: hoy },

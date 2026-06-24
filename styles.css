@@ -370,6 +370,50 @@ body {
   font-size: 0.88rem;
 }
 
+/* ---------- Tiendas / Catálogos ---------- */
+.tienda-cabecera {
+  background: linear-gradient(135deg, var(--verde), var(--verde-oscuro));
+  color: #fff;
+  border-radius: 12px;
+  padding: 1rem;
+  margin: 0.4rem;
+}
+.tienda-cabecera .nombre {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.tienda-cabecera .emoji {
+  font-size: 2rem;
+}
+.tienda-cabecera h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+.tienda-cabecera p {
+  margin: 0.3rem 0 0.6rem;
+  font-size: 0.85rem;
+  opacity: 0.95;
+}
+.tienda-cabecera .acciones {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.tienda-cabecera button {
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-radius: 20px;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.tienda-cabecera button:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
 /* ---------- Productos patrocinados ---------- */
 .tarjeta.patrocinado {
   background: #fffdf3;
