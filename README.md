@@ -19,6 +19,9 @@ subir fotos, marcar dónde encontrarlos en un mapa del mundo, y mucho más.
 - 📅 **Eventos de cata**: crea encuentros e invita amigos.
 - 📱 **Compartir** productos en **WhatsApp** y redes sociales.
 - 🤝 **Invitar amigos** a tu caseta.
+- 👥 **Comunidad**: sigue a otras personas (haz amigos) y ve **qué califican y opinan**.
+- 💬 **Varias opiniones por producto**: cada producto muestra todas las reseñas,
+  su promedio de estrellas, y resalta cuando **un amigo opinó**.
 - 🔔 **Alarmas de mejor precio** (dentro de la app).
 - 📌 **Notas de interés (guías curadas)**: "Los mejores cafés", "Ruta de postres",
   "Los mejores sánduches", "Vinos y bebidas"... con su ruta en el mapa.

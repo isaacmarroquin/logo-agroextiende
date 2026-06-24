@@ -14,7 +14,18 @@ const ALMACEN = {
   alarmas: "catalo_alarmas",
   eventos: "catalo_eventos",
   usuario: "catalo_usuario",
+  amigos: "catalo_amigos",
 };
+
+// Personas de la comunidad (demostración). Con un servidor real, esto
+// vendría de los usuarios de verdad que se registren.
+const COMUNIDAD = [
+  { nombre: "Ana", emoji: "👩", bio: "Amante de los postres 🍰" },
+  { nombre: "Luis", emoji: "🧔", bio: "Cazador de buen café ☕" },
+  { nombre: "Sofía", emoji: "👧", bio: "Pruebo de todo, opino de todo" },
+  { nombre: "Carlos", emoji: "👨", bio: "Foodie de sánduches 🥪" },
+  { nombre: "María", emoji: "👩‍🦰", bio: "Vinos y artesanías 🍷" },
+];
 
 function leer(clave, porDefecto) {
   try {
@@ -32,6 +43,38 @@ let favoritos = leer(ALMACEN.favoritos, []); // lista de ids
 let alarmas = leer(ALMACEN.alarmas, {}); // { "nombre producto": precioObjetivo }
 let eventos = leer(ALMACEN.eventos, []);
 let usuario = leer(ALMACEN.usuario, null); // { nombre, caseta }
+let amigos = leer(ALMACEN.amigos, []); // nombres de personas que sigues
+
+// Cada producto puede tener VARIAS opiniones. Productos antiguos (con una
+// sola opinión) se convierten al formato nuevo aquí.
+function migrarProductos() {
+  let cambio = false;
+  productos.forEach((p) => {
+    if (!Array.isArray(p.opiniones)) {
+      p.opiniones = [{
+        autor: p.autor || "Anónimo",
+        calificacion: p.calificacion || 5,
+        texto: p.opinion || "",
+        fecha: p.fecha,
+      }];
+      cambio = true;
+    }
+  });
+  if (cambio) escribir(ALMACEN.productos, productos);
+}
+
+// Promedio de estrellas y número de opiniones de un producto
+function promedio(p) {
+  if (!p.opiniones || !p.opiniones.length) return p.calificacion || 0;
+  const suma = p.opiniones.reduce((s, o) => s + o.calificacion, 0);
+  return Math.round(suma / p.opiniones.length);
+}
+function numOpiniones(p) {
+  return p.opiniones ? p.opiniones.length : 0;
+}
+function esAmigo(nombre) {
+  return amigos.includes(nombre);
+}
 
 let tabActual = "todos";
 let miUbicacion = null; // {lat, lng} cuando el usuario comparte ubicación
@@ -210,17 +253,22 @@ form.addEventListener("submit", async (e) => {
   const archivoFoto = datos.get("foto");
   const foto = await leerImagen(archivoFoto && archivoFoto.size ? archivoFoto : null);
 
+  const autor = usuario ? usuario.nombre : "Anónimo";
   const producto = {
     id: Date.now(),
     nombre: datos.get("nombre"),
     categoria: datos.get("categoria"),
-    opinion: datos.get("opinion"),
-    calificacion: Number(datos.get("calificacion")),
+    opiniones: [{
+      autor: autor,
+      calificacion: Number(datos.get("calificacion")),
+      texto: datos.get("opinion"),
+      fecha: new Date().toLocaleDateString("es"),
+    }],
     precio: datos.get("precio") ? Number(datos.get("precio")) : null,
     lugar: datos.get("lugar") || "",
     ubicacion: ubicacionElegida,
     foto: foto,
-    autor: usuario ? usuario.nombre : "Anónimo",
+    autor: autor,
     linkCompra: datos.get("linkCompra") === "on",
     envio: datos.get("envio") === "on",
     patrocinado: datos.get("patrocinado") === "on",
@@ -275,7 +323,7 @@ window.ponerAlarma = function (nombre) {
 
 // ================= Compartir / invitar =================
 function textoProducto(p) {
-  return `Mira "${p.nombre}" en Cátalo ${estrellas(p.calificacion)}${
+  return `Mira "${p.nombre}" en Cátalo ${estrellas(promedio(p))}${
     p.precio != null ? " — $" + p.precio : ""
   }${p.lugar ? " · " + p.lugar : ""}`;
 }
@@ -378,6 +426,90 @@ function pintarEventos() {
     </div>`).join("");
 }
 
+// ================= Comunidad (amigos) =================
+window.seguirAmigo = function (nombre) {
+  if (esAmigo(nombre)) amigos = amigos.filter((x) => x !== nombre);
+  else amigos.push(nombre);
+  escribir(ALMACEN.amigos, amigos);
+  render();
+};
+
+// Lista las opiniones recientes hechas por tus amigos
+function actividadDeAmigos() {
+  const items = [];
+  productos.forEach((p) => {
+    (p.opiniones || []).forEach((o) => {
+      if (esAmigo(o.autor)) items.push({ producto: p, opinion: o });
+    });
+  });
+  return items.slice(0, 15);
+}
+
+function dibujarComunidad() {
+  const avatar = (nombre) => {
+    const u = COMUNIDAD.find((c) => c.nombre === nombre);
+    return u ? u.emoji : "🙂";
+  };
+
+  const siguiendo = COMUNIDAD.filter((c) => esAmigo(c.nombre));
+  const sugeridos = COMUNIDAD.filter((c) => !esAmigo(c.nombre));
+
+  const tarjetaPersona = (c) => `
+    <div class="persona">
+      <span class="avatar">${c.emoji}</span>
+      <div class="datos"><b>${escapar(c.nombre)}</b><small>${escapar(c.bio)}</small></div>
+      <button class="${esAmigo(c.nombre) ? "siguiendo" : ""}" onclick="seguirAmigo('${escapar(c.nombre)}')">
+        ${esAmigo(c.nombre) ? "✓ Amigos" : "+ Seguir"}
+      </button>
+    </div>`;
+
+  const actividad = actividadDeAmigos();
+  const actividadHtml = actividad.length
+    ? actividad.map((a) => `
+        <div class="actividad" onclick="verDetallePorId(${a.producto.id})">
+          ${avatar(a.opinion.autor)} <b>${escapar(a.opinion.autor)}</b> opinó de
+          <b>${escapar(a.producto.nombre)}</b><br>
+          <span class="estrellas">${estrellas(a.opinion.calificacion)}</span>
+          ${a.opinion.texto ? "— " + escapar(a.opinion.texto) : ""}
+        </div>`).join("")
+    : `<div class="vacio">Sigue a algunas personas para ver qué opinan. 👆</div>`;
+
+  lista.innerHTML = `
+    <div class="comunidad-seccion">
+      ${siguiendo.length ? `<h3>👥 Tus amigos (${siguiendo.length})</h3>
+        <div class="personas">${siguiendo.map(tarjetaPersona).join("")}</div>` : ""}
+      <h3>✨ Personas para seguir</h3>
+      <div class="personas">${sugeridos.map(tarjetaPersona).join("") || "<div class='vacio'>Ya sigues a todos 🎉</div>"}</div>
+      <h3>📰 Lo que opinan tus amigos</h3>
+      ${actividadHtml}
+    </div>`;
+}
+
+window.verDetallePorId = function (id) {
+  const p = productos.find((x) => x.id === id);
+  if (p) verDetalle(p);
+};
+
+// ================= Agregar una opinión a un producto =================
+window.agregarOpinion = function (id) {
+  if (!usuario) { abrirPerfil(); return; }
+  const p = productos.find((x) => x.id === id);
+  if (!p) return;
+  const cal = Number(document.getElementById("nueva-cal").value);
+  const texto = document.getElementById("nueva-opinion").value.trim();
+  if (!texto) { alert("Escribe tu opinión 🙂"); return; }
+  if (!Array.isArray(p.opiniones)) p.opiniones = [];
+  p.opiniones.push({
+    autor: usuario.nombre,
+    calificacion: cal,
+    texto: texto,
+    fecha: new Date().toLocaleDateString("es"),
+  });
+  escribir(ALMACEN.productos, productos);
+  verDetalle(p);
+  render();
+};
+
 // ================= Pestañas =================
 document.querySelectorAll(".tab[data-tab]").forEach((t) =>
   t.addEventListener("click", async () => {
@@ -431,8 +563,16 @@ function render(filtro = "") {
     cerca: "📍 Cerca de ti",
     caseta: usuario ? `🎪 ${usuario.caseta}` : "🎪 Mi caseta (crea tu usuario)",
     guias: "📌 Notas de interés",
+    comunidad: "👥 Comunidad",
   };
   document.getElementById("lista-titulo").textContent = titulos[tabActual];
+
+  // Modo "Comunidad"
+  if (tabActual === "comunidad") {
+    dibujarComunidad();
+    dibujarMapa(productos);
+    return;
+  }
 
   // Modo "Notas de interés" (guías curadas)
   if (tabActual === "guias" && !guiaSeleccionada) {
@@ -473,12 +613,14 @@ function render(filtro = "") {
         <img src="${p.foto || imagenPlaceholder()}" alt="${escapar(p.nombre)}" />
         <div class="tarjeta-info">
           <h3>${escapar(p.nombre)}</h3>
-          <div class="estrellas">${estrellas(p.calificacion)}
+          <div class="estrellas">${estrellas(promedio(p))}
+            <span style="color:#5f6368">(${numOpiniones(p)})</span>
             ${p.precio != null ? `<span class="precio"> · $${p.precio}</span>` : ""}
           </div>
           <p class="lugar">${p.lugar ? "📍 " + escapar(p.lugar) : (p.ubicacion ? "📍 En el mapa" : "Sin ubicación")}</p>
           <div class="badges">
             ${p.patrocinado ? '<span class="badge patro">⭐ Patrocinado</span>' : ""}
+            ${(p.opiniones || []).some((o) => esAmigo(o.autor)) ? '<span class="badge">👥 Amigo opinó</span>' : ""}
             <span class="badge cat">${escapar(p.categoria || "Otro")}</span>
             ${p.dist != null ? `<span class="badge dist">📍 ${p.dist.toFixed(1)} km</span>` : ""}
             ${p.linkCompra ? '<span class="badge">🛒 Comprar</span>' : ""}
@@ -499,7 +641,7 @@ function dibujarMapa(items) {
   items.forEach((p) => {
     if (p.ubicacion) {
       const m = L.marker([p.ubicacion.lat, p.ubicacion.lng]);
-      m.bindPopup(`<b>${escapar(p.nombre)}</b><br>${estrellas(p.calificacion)}<br>${escapar(p.lugar || "")}`);
+      m.bindPopup(`<b>${escapar(p.nombre)}</b><br>${estrellas(promedio(p))}<br>${escapar(p.lugar || "")}`);
       m.on("click", () => verDetalle(p));
       capaMarcadores.addLayer(m);
     }
@@ -555,13 +697,42 @@ function verDetalle(p) {
   detalle.innerHTML = `
     ${p.foto ? `<img src="${p.foto}" alt="${escapar(p.nombre)}" />` : ""}
     <h2>${escapar(p.nombre)}</h2>
-    <div class="estrellas">${estrellas(p.calificacion)}</div>
+    <div class="estrellas">${estrellas(promedio(p))} <span style="color:#5f6368;font-size:0.9rem">${promedio(p)}/5 · ${numOpiniones(p)} opinión(es)</span></div>
     ${p.precio != null ? `<div class="precio-grande">$${p.precio}</div>` : ""}
-    <div class="bloque"><b>Categoría:</b> ${escapar(p.categoria || "Otro")} · por ${escapar(p.autor || "Anónimo")}</div>
-    <div class="bloque"><b>Opinión:</b><br>${escapar(p.opinion)}</div>
+    <div class="bloque"><b>Categoría:</b> ${escapar(p.categoria || "Otro")} · publicado por ${escapar(p.autor || "Anónimo")}</div>
     <div class="bloque"><b>¿Dónde encontrarlo?</b><br>
       ${p.lugar ? escapar(p.lugar) : "No especificado"}
       ${p.ubicacion ? `<br><small>📍 ${p.ubicacion.lat.toFixed(4)}, ${p.ubicacion.lng.toFixed(4)}</small>` : ""}
+    </div>
+
+    <div class="bloque"><b>Opiniones y calificaciones</b>
+      <div class="opiniones">
+        ${(p.opiniones || []).map((o) => `
+          <div class="opinion-item">
+            <div class="cabeza">
+              <b>${escapar(o.autor)}</b>
+              ${esAmigo(o.autor) ? '<span class="amigo-tag">👥 amigo</span>' : ""}
+              <span class="estrellas">${estrellas(o.calificacion)}</span>
+              <small style="color:#5f6368">${escapar(o.fecha || "")}</small>
+            </div>
+            <div>${escapar(o.texto)}</div>
+          </div>`).join("")}
+      </div>
+    </div>
+
+    <div class="agregar-opinion">
+      <b>✍️ Deja tu opinión</b>
+      <select id="nueva-cal">
+        <option value="5">★★★★★ — Excelente</option>
+        <option value="4">★★★★ — Muy bueno</option>
+        <option value="3">★★★ — Aceptable</option>
+        <option value="2">★★ — Malo</option>
+        <option value="1">★ — Pésimo</option>
+      </select>
+      <textarea id="nueva-opinion" rows="2" placeholder="¿Qué te pareció?"></textarea>
+      <div class="form-acciones" style="margin-top:0.5rem">
+        <button class="btn btn-primary" onclick="agregarOpinion(${p.id})">Publicar opinión</button>
+      </div>
     </div>
 
     <div class="compartir">
@@ -603,26 +774,33 @@ buscar.addEventListener("input", (e) => render(e.target.value));
 
 // ================= Datos de ejemplo (primera vez) =================
 if (productos.length === 0) {
+  const hoy = new Date().toLocaleDateString("es");
   productos = [
     {
       id: 1, nombre: "Galleta de avena casera", categoria: "Postre",
-      opinion: "Crujiente por fuera, suave por dentro. ¡Deliciosa con café!",
-      calificacion: 5, precio: 1.5, lugar: "Panadería La Esquina, Bogotá",
+      precio: 1.5, lugar: "Panadería La Esquina, Bogotá",
       ubicacion: { lat: 4.711, lng: -74.0721 }, foto: null, autor: "Ana",
-      linkCompra: true, envio: false, fecha: new Date().toLocaleDateString("es"),
+      linkCompra: true, envio: false, patrocinado: false, fecha: hoy,
+      opiniones: [
+        { autor: "Ana", calificacion: 5, texto: "Crujiente por fuera, suave por dentro. ¡Deliciosa con café!", fecha: hoy },
+        { autor: "Sofía", calificacion: 4, texto: "Muy rica, aunque un poco dulce para mí.", fecha: hoy },
+      ],
     },
     {
       id: 2, nombre: "Café de origen — tueste medio", categoria: "Bebida",
-      opinion: "Aroma a chocolate y nuez. Muy equilibrado.",
-      calificacion: 4, precio: 8, lugar: "Finca El Roble",
+      precio: 8, lugar: "Finca El Roble",
       ubicacion: { lat: 4.5709, lng: -75.6815 }, foto: null, autor: "Luis",
-      linkCompra: false, envio: true, fecha: new Date().toLocaleDateString("es"),
+      linkCompra: false, envio: true, patrocinado: false, fecha: hoy,
+      opiniones: [
+        { autor: "Luis", calificacion: 4, texto: "Aroma a chocolate y nuez. Muy equilibrado.", fecha: hoy },
+      ],
     },
   ];
   escribir(ALMACEN.productos, productos);
 }
 
 // ================= Arranque =================
+migrarProductos();
 pintarPerfil();
 pintarBanner();
 render();
