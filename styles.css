@@ -177,6 +177,92 @@ body {
   display: none;
 }
 
+/* ---------- Banner de publicidad ---------- */
+.banner-ad {
+  margin: 0.6rem;
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  background: linear-gradient(135deg, #1565c0, #2e7d32);
+  color: #fff;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.banner-ad .ad-label {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  font-size: 0.6rem;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.banner-ad h4 {
+  margin: 0 0 0.2rem;
+  font-size: 0.95rem;
+}
+.banner-ad p {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.95;
+}
+
+/* ---------- Guías / Notas de interés ---------- */
+.guias-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  padding: 0.3rem;
+}
+.guia-card {
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 1rem 0.8rem;
+  cursor: pointer;
+  text-align: center;
+  transition: 0.15s;
+}
+.guia-card:hover {
+  background: var(--verde-claro);
+  border-color: #c8e6c9;
+  transform: translateY(-2px);
+}
+.guia-card .emoji {
+  font-size: 2rem;
+}
+.guia-card h3 {
+  margin: 0.4rem 0 0.2rem;
+  font-size: 0.95rem;
+}
+.guia-card .conteo {
+  font-size: 0.78rem;
+  color: var(--gris);
+}
+.guia-volver {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.4rem;
+}
+.guia-volver button {
+  background: none;
+  border: none;
+  color: var(--verde-oscuro);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+/* ---------- Productos patrocinados ---------- */
+.tarjeta.patrocinado {
+  background: #fffdf3;
+  border-color: #ffd54f;
+}
+.badge.patro {
+  background: #fff3cd;
+  color: #8a6d00;
+}
+
 /* ---------- Lista de productos ---------- */
 .lista {
   overflow-y: auto;

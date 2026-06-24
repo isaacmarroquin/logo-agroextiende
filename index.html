@@ -33,6 +33,7 @@
     <button class="tab" data-tab="favoritos">❤️ Favoritos</button>
     <button class="tab" data-tab="cerca">📍 Cerca de mí</button>
     <button class="tab" data-tab="caseta">🎪 Mi caseta</button>
+    <button class="tab" data-tab="guias">📌 Notas de interés</button>
     <span class="tabs-sep"></span>
     <button id="btn-ruta" class="tab tab-accion">🗺️ Ruta de fin de semana</button>
     <button id="btn-eventos" class="tab tab-accion">📅 Eventos de cata</button>
@@ -51,6 +52,21 @@
         />
       </div>
       <div id="aviso-precio" class="aviso-precio oculto"></div>
+
+      <!-- ===== Banner de publicidad =====
+           "Sistema": patrocinios propios de Cátalo (los controlas tú).
+           "Google": para activar AdSense real, reemplaza el bloque de
+           abajo con tu código de https://adsense.google.com (necesitas
+           una web publicada y aprobación de Google). -->
+      <div id="banner-ad" class="banner-ad"></div>
+      <!--
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-TU_ID_DE_ADSENSE"
+           data-ad-slot="TU_SLOT"
+           data-ad-format="auto"></ins>
+      -->
+
       <div id="lista" class="lista"></div>
     </section>
 
@@ -134,6 +150,10 @@
           <label class="check">
             <input type="checkbox" name="envio" />
             Ofrecer <b>envío a domicilio</b> (de pago)
+          </label>
+          <label class="check">
+            <input type="checkbox" name="patrocinado" />
+            <b>Patrocinar</b> este producto (aparece destacado arriba) 💳
           </label>
         </fieldset>
 

@@ -20,7 +20,18 @@ subir fotos, marcar dónde encontrarlos en un mapa del mundo, y mucho más.
 - 📱 **Compartir** productos en **WhatsApp** y redes sociales.
 - 🤝 **Invitar amigos** a tu caseta.
 - 🔔 **Alarmas de mejor precio** (dentro de la app).
+- 📌 **Notas de interés (guías curadas)**: "Los mejores cafés", "Ruta de postres",
+  "Los mejores sánduches", "Vinos y bebidas"... con su ruta en el mapa.
+- 📢 **Banners de publicidad**: del sistema (patrocinios propios) y espacio
+  preparado para **Google AdSense**.
+- ⭐ **Productos patrocinados**: las marcas pueden destacar sus productos arriba.
 - 💳 **Funciones premium de pago**: agregar *link para comprar* o *envío a domicilio*.
+
+### 💰 Cómo gana dinero Cátalo
+1. **Funciones premium** (link de compra, envío).
+2. **Productos patrocinados** (marcas que pagan por aparecer destacadas).
+3. **Publicidad** (Google AdSense + banners propios del sistema).
+4. A futuro: **comisión** por venta y **planes para empresas**.
 
 > Opinar siempre es gratis. Solo se cobra cuando alguien quiere vender o enviar.
 

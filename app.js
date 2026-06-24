@@ -35,6 +35,46 @@ let usuario = leer(ALMACEN.usuario, null); // { nombre, caseta }
 
 let tabActual = "todos";
 let miUbicacion = null; // {lat, lng} cuando el usuario comparte ubicación
+let guiaSeleccionada = null; // id de la guía abierta en "Notas de interés"
+
+// ================= Guías / Notas de interés =================
+// Colecciones curadas. Cada producto entra a una guía si su nombre o
+// categoría coincide con las palabras clave.
+const GUIAS = [
+  { id: "cafes", emoji: "☕", titulo: "Los mejores cafés", claves: ["café", "cafe"], categorias: ["Bebida"] },
+  { id: "postres", emoji: "🍰", titulo: "Ruta de postres", claves: ["postre", "galleta", "torta", "pastel", "helado", "dulce"], categorias: ["Postre"] },
+  { id: "sanduches", emoji: "🥪", titulo: "Los mejores sánduches", claves: ["sánduche", "sanduche", "sándwich", "sandwich", "hamburguesa"], categorias: [] },
+  { id: "vinos", emoji: "🍷", titulo: "Vinos y bebidas", claves: ["vino", "cerveza", "licor", "cóctel", "coctel"], categorias: ["Bebida"] },
+  { id: "artesanias", emoji: "🎨", titulo: "Artesanías locales", claves: ["artesanía", "artesania"], categorias: ["Artesanía"] },
+];
+function productosDeGuia(guia) {
+  return productos.filter((p) => {
+    const txt = (p.nombre + " " + (p.categoria || "")).toLowerCase();
+    const porClave = guia.claves.some((k) => txt.includes(k));
+    const porCat = guia.categorias.includes(p.categoria);
+    return porClave || porCat;
+  });
+}
+
+// ================= Banners de publicidad =================
+// Banners del "sistema": patrocinios propios de Cátalo. Rotan solos.
+const BANNERS_SISTEMA = [
+  { titulo: "🎪 ¿Tienes un negocio?", texto: "Patrocina tus productos y aparece destacado arriba.", tipo: "Patrocinado" },
+  { titulo: "☕ Semana del café", texto: "Descubre los mejores cafés cerca de ti en Notas de interés.", tipo: "Sistema" },
+  { titulo: "🍷 ¿Eres una marca?", texto: "Las empresas pueden patrocinar sus productos en Cátalo.", tipo: "Publicidad" },
+];
+let bannerIndice = 0;
+function pintarBanner() {
+  const cont = document.getElementById("banner-ad");
+  const b = BANNERS_SISTEMA[bannerIndice % BANNERS_SISTEMA.length];
+  cont.innerHTML = `
+    <span class="ad-label">${b.tipo}</span>
+    <h4>${b.titulo}</h4>
+    <p>${b.texto}</p>`;
+  bannerIndice++;
+}
+// Rota el banner cada 6 segundos (como haría un anuncio real)
+setInterval(pintarBanner, 6000);
 
 // ================= Mapa =================
 const mapa = L.map("mapa").setView([20, 0], 2);
@@ -183,6 +223,7 @@ form.addEventListener("submit", async (e) => {
     autor: usuario ? usuario.nombre : "Anónimo",
     linkCompra: datos.get("linkCompra") === "on",
     envio: datos.get("envio") === "on",
+    patrocinado: datos.get("patrocinado") === "on",
     fecha: new Date().toLocaleDateString("es"),
   };
 
@@ -343,6 +384,7 @@ document.querySelectorAll(".tab[data-tab]").forEach((t) =>
     document.querySelectorAll(".tab[data-tab]").forEach((x) => x.classList.remove("activa"));
     t.classList.add("activa");
     tabActual = t.dataset.tab;
+    guiaSeleccionada = null;
     if (tabActual === "cerca" && !miUbicacion) {
       miUbicacion = await pedirUbicacion();
       if (!miUbicacion) alert("No pudimos obtener tu ubicación. Activa el permiso de ubicación en tu navegador.");
@@ -355,6 +397,10 @@ document.querySelectorAll(".tab[data-tab]").forEach((t) =>
 function productosVisibles(filtro) {
   let lista = productos.slice();
 
+  if (tabActual === "guias" && guiaSeleccionada) {
+    const guia = GUIAS.find((g) => g.id === guiaSeleccionada);
+    lista = guia ? productosDeGuia(guia) : [];
+  }
   if (tabActual === "favoritos") lista = lista.filter((p) => esFavorito(p.id));
   if (tabActual === "caseta") lista = lista.filter((p) => usuario && p.autor === usuario.nombre);
   if (tabActual === "cerca" && miUbicacion) {
@@ -366,6 +412,10 @@ function productosVisibles(filtro) {
   if (filtro) {
     const f = filtro.toLowerCase();
     lista = lista.filter((p) => p.nombre.toLowerCase().includes(f));
+  }
+  // Los patrocinados aparecen primero (orden estable) en la vista general
+  if (tabActual === "todos") {
+    lista.sort((a, b) => (b.patrocinado ? 1 : 0) - (a.patrocinado ? 1 : 0));
   }
   return lista;
 }
@@ -380,22 +430,42 @@ function render(filtro = "") {
     favoritos: "❤️ Tus favoritos",
     cerca: "📍 Cerca de ti",
     caseta: usuario ? `🎪 ${usuario.caseta}` : "🎪 Mi caseta (crea tu usuario)",
+    guias: "📌 Notas de interés",
   };
   document.getElementById("lista-titulo").textContent = titulos[tabActual];
 
+  // Modo "Notas de interés" (guías curadas)
+  if (tabActual === "guias" && !guiaSeleccionada) {
+    dibujarGuias();
+    dibujarMapa(productos);
+    return;
+  }
+
   const visibles = productosVisibles(filtro);
 
+  // Barra de "volver" cuando estás dentro de una guía
+  lista.innerHTML = "";
+  if (tabActual === "guias" && guiaSeleccionada) {
+    const guia = GUIAS.find((g) => g.id === guiaSeleccionada);
+    const barra = document.createElement("div");
+    barra.className = "guia-volver";
+    barra.innerHTML = `
+      <button onclick="volverAGuias()">← Todas las notas</button>
+      <b>${guia ? guia.emoji + " " + escapar(guia.titulo) : ""}</b>
+      <button onclick="rutaDeGuia()">🗺️ Ver ruta</button>`;
+    lista.appendChild(barra);
+  }
+
   if (visibles.length === 0) {
-    lista.innerHTML = `<div class="vacio">${
+    lista.insertAdjacentHTML("beforeend", `<div class="vacio">${
       productos.length === 0
         ? "Aún no hay productos. ¡Sé el primero en opinar! 🍪"
         : "No hay productos para mostrar aquí."
-    }</div>`;
+    }</div>`);
   } else {
-    lista.innerHTML = "";
     visibles.forEach((p) => {
       const tarjeta = document.createElement("div");
-      tarjeta.className = "tarjeta";
+      tarjeta.className = "tarjeta" + (p.patrocinado ? " patrocinado" : "");
       tarjeta.innerHTML = `
         <button class="fav" onclick="event.stopPropagation(); alternarFavorito(${p.id})">
           ${esFavorito(p.id) ? "❤️" : "🤍"}
@@ -408,6 +478,7 @@ function render(filtro = "") {
           </div>
           <p class="lugar">${p.lugar ? "📍 " + escapar(p.lugar) : (p.ubicacion ? "📍 En el mapa" : "Sin ubicación")}</p>
           <div class="badges">
+            ${p.patrocinado ? '<span class="badge patro">⭐ Patrocinado</span>' : ""}
             <span class="badge cat">${escapar(p.categoria || "Otro")}</span>
             ${p.dist != null ? `<span class="badge dist">📍 ${p.dist.toFixed(1)} km</span>` : ""}
             ${p.linkCompra ? '<span class="badge">🛒 Comprar</span>' : ""}
@@ -419,9 +490,13 @@ function render(filtro = "") {
     });
   }
 
-  // Mapa
+  dibujarMapa(productos);
+}
+
+// Dibuja los marcadores en el mapa
+function dibujarMapa(items) {
   capaMarcadores.clearLayers();
-  productos.forEach((p) => {
+  items.forEach((p) => {
     if (p.ubicacion) {
       const m = L.marker([p.ubicacion.lat, p.ubicacion.lng]);
       m.bindPopup(`<b>${escapar(p.nombre)}</b><br>${estrellas(p.calificacion)}<br>${escapar(p.lugar || "")}`);
@@ -429,7 +504,6 @@ function render(filtro = "") {
       capaMarcadores.addLayer(m);
     }
   });
-  // Marcador de "mi ubicación"
   if (miUbicacion) {
     const yo = L.circleMarker([miUbicacion.lat, miUbicacion.lng], {
       radius: 8, color: "#1565c0", fillColor: "#1565c0", fillOpacity: 0.6,
@@ -437,6 +511,44 @@ function render(filtro = "") {
     capaMarcadores.addLayer(yo);
   }
 }
+
+// Dibuja las tarjetas de guías (Notas de interés)
+function dibujarGuias() {
+  lista.innerHTML =
+    `<div class="ayuda" style="padding:0.4rem 0.6rem">Colecciones curadas. Toca una para explorarla y armar tu ruta.</div>` +
+    `<div class="guias-grid">` +
+    GUIAS.map((g) => {
+      const n = productosDeGuia(g).length;
+      return `<div class="guia-card" onclick="abrirGuia('${g.id}')">
+        <div class="emoji">${g.emoji}</div>
+        <h3>${escapar(g.titulo)}</h3>
+        <div class="conteo">${n} producto${n === 1 ? "" : "s"}</div>
+      </div>`;
+    }).join("") +
+    `</div>`;
+}
+window.abrirGuia = function (id) {
+  guiaSeleccionada = id;
+  render();
+};
+window.volverAGuias = function () {
+  guiaSeleccionada = null;
+  render();
+};
+// Dibuja en el mapa la ruta de la guía abierta (ej: ruta de postres)
+window.rutaDeGuia = function () {
+  const guia = GUIAS.find((g) => g.id === guiaSeleccionada);
+  if (!guia) return;
+  const puntos = productosDeGuia(guia).filter((p) => p.ubicacion);
+  if (puntos.length < 2) {
+    alert("Necesitas al menos 2 productos con ubicación en esta nota para armar la ruta.");
+    return;
+  }
+  if (capaRuta) capaRuta.remove();
+  const coords = puntos.map((p) => [p.ubicacion.lat, p.ubicacion.lng]);
+  capaRuta = L.polyline(coords, { color: "#6a1b9a", weight: 4, dashArray: "8 6" }).addTo(mapa);
+  mapa.fitBounds(capaRuta.getBounds(), { padding: [40, 40] });
+};
 
 // ================= Detalle de un producto =================
 function verDetalle(p) {
@@ -512,4 +624,5 @@ if (productos.length === 0) {
 
 // ================= Arranque =================
 pintarPerfil();
+pintarBanner();
 render();
