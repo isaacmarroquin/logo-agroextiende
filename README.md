@@ -2,51 +2,65 @@
 
 **Opina, descubre y mapea productos — desde una galleta hasta lo que sea.**
 
-Una web app donde cualquier persona puede:
+Una web app donde cualquier persona puede opinar sobre productos de todo tipo,
+subir fotos, marcar dónde encontrarlos en un mapa del mundo, y mucho más.
 
-- ⭐ **Opinar y calificar** productos de todo tipo.
-- 📸 **Subir fotos** de lo que prueba.
-- 🗺️ **Marcar en un mapa del mundo** dónde encontrar cada producto.
-- 💳 Activar **funciones premium de pago**: agregar un *link para comprar* o pedir *envío a domicilio*.
+---
 
-> Opinar siempre es gratis. Solo se cobra cuando alguien quiere vender o enviar el producto.
+## ✨ Funciones
+
+- 👤 **Crear tu usuario** y tu propia **caseta** (tu puesto de productos).
+- ⭐ **Opinar y calificar** productos con estrellas.
+- 📸 **Subir fotos** de lo que pruebas.
+- 🗺️ **Mapa del mundo** para marcar dónde encontrar cada producto.
+- ❤️ **Lista de favoritos**.
+- 📍 **Cerca de mí**: ordena los productos por distancia usando tu ubicación.
+- 🗺️ **Ruta de fin de semana**: dibuja en el mapa una ruta uniendo tus favoritos.
+- 📅 **Eventos de cata**: crea encuentros e invita amigos.
+- 📱 **Compartir** productos en **WhatsApp** y redes sociales.
+- 🤝 **Invitar amigos** a tu caseta.
+- 🔔 **Alarmas de mejor precio** (dentro de la app).
+- 💳 **Funciones premium de pago**: agregar *link para comprar* o *envío a domicilio*.
+
+> Opinar siempre es gratis. Solo se cobra cuando alguien quiere vender o enviar.
 
 ---
 
 ## ▶️ Cómo probarla (no necesitas instalar nada)
 
-1. Descarga o abre esta carpeta en tu computadora.
-2. Haz **doble clic** en el archivo `index.html`.
-3. Se abrirá en tu navegador (Chrome, Edge, etc.) y ¡listo!
+1. Abre esta carpeta en tu computadora.
+2. Haz **doble clic** en `index.html`.
+3. Se abre en tu navegador. ¡Listo!
 
-> 💡 Necesitas internet la primera vez, porque el mapa se carga desde OpenStreetMap (gratis, sin clave).
+> 💡 Para "Cerca de mí" tu navegador te pedirá permiso de ubicación (es seguro).
+> El mapa se carga desde OpenStreetMap (gratis, sin clave).
 
 ---
 
-## 🧩 Qué hay dentro (los archivos)
+## 🧩 Los archivos
 
 | Archivo | Para qué sirve |
 |---|---|
-| `index.html` | La **estructura** de la página (lo que se ve). |
-| `styles.css` | Los **colores y el diseño** (lo bonito). |
-| `app.js` | La **lógica** (guardar productos, el mapa, las opiniones). |
+| `index.html` | La **estructura** de la página. |
+| `styles.css` | Los **colores y el diseño**. |
+| `app.js` | La **lógica** (productos, mapa, favoritos, eventos...). |
 | `logo-tobbar.svg` | El logo. |
 
 ---
 
-## 📌 Estado actual: versión de demostración
+## 📌 Estado: versión de demostración
 
-Esta es una **primera versión funcional** para que veas la idea en acción.
-Por ahora, los productos se guardan **solo en tu navegador** (no en internet),
-así que si abres la web en otro dispositivo no aparecerán los mismos productos.
+Todo se guarda **solo en tu navegador** (localStorage). Funciona perfecto para
+probar la idea, pero todavía no es compartido entre dispositivos.
 
-### Próximos pasos para que sea una app "de verdad"
+### Para convertirla en una app "de verdad"
 
-1. **Servidor y base de datos** → para que los productos se guarden en internet
-   y todos vean lo mismo.
-2. **Cuentas de usuario** → para iniciar sesión y saber quién opina.
-3. **Pagos reales** → conectar un sistema de pago (ej. Stripe o Mercado Pago)
-   para cobrar las funciones premium (link de compra y envío).
-4. **Publicar la web** → ponerla en internet con su propia dirección.
+| Paso | Para qué |
+|---|---|
+| 🗄️ Servidor + base de datos | Que los productos se guarden en internet y todos vean lo mismo. |
+| 👤 Login real | Cuentas seguras con contraseña o Google. |
+| 🔔 Notificaciones al celular | Que las **alarmas de precio** te avisen aunque la app esté cerrada. |
+| 💳 Pagos reales | Cobrar las funciones premium (ej. Stripe o Mercado Pago). |
+| 🌐 Publicar la web | Darle su propia dirección de internet para compartirla. |
 
-¿Quieres que avancemos con alguno de estos pasos? Solo pídemelo. 🚀
+¿Avanzamos con alguno? Solo pídemelo. 🚀

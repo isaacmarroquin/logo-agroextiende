@@ -50,6 +50,25 @@ body {
   font-size: 0.82rem;
   color: var(--gris);
 }
+.topbar-acciones {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.perfil {
+  font-size: 0.88rem;
+}
+.perfil .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--verde-claro);
+  color: var(--verde-oscuro);
+  padding: 0.4rem 0.7rem;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 600;
+}
 
 /* ---------- Botones ---------- */
 .btn {
@@ -74,13 +93,51 @@ body {
   background: var(--verde-oscuro);
 }
 
+/* ---------- Pestañas ---------- */
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.2rem;
+  background: #fff;
+  border-bottom: 1px solid var(--borde);
+  overflow-x: auto;
+}
+.tab {
+  border: 1px solid var(--borde);
+  background: #fff;
+  padding: 0.45rem 0.9rem;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.tab:hover {
+  background: #f0f0f0;
+}
+.tab.activa {
+  background: var(--verde);
+  color: #fff;
+  border-color: var(--verde);
+  font-weight: 600;
+}
+.tab-accion {
+  border-style: dashed;
+}
+.tabs-sep {
+  flex: 0 0 1px;
+  align-self: stretch;
+  background: var(--borde);
+  margin: 0 0.4rem;
+}
+
 /* ---------- Layout principal ---------- */
 .layout {
   display: grid;
-  grid-template-columns: 380px 1fr;
+  grid-template-columns: 400px 1fr;
   gap: 1rem;
   padding: 1rem;
-  height: calc(100vh - 130px);
+  height: calc(100vh - 185px);
 }
 .panel {
   background: #fff;
@@ -106,6 +163,20 @@ body {
   font-size: 0.9rem;
 }
 
+/* ---------- Aviso de precio ---------- */
+.aviso-precio {
+  margin: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  background: #fff8e1;
+  border: 1px solid #f5a623;
+  color: #8a6d00;
+  font-size: 0.85rem;
+}
+.aviso-precio.oculto {
+  display: none;
+}
+
 /* ---------- Lista de productos ---------- */
 .lista {
   overflow-y: auto;
@@ -119,6 +190,7 @@ body {
   cursor: pointer;
   transition: 0.15s;
   border: 1px solid transparent;
+  position: relative;
 }
 .tarjeta:hover {
   background: var(--verde-claro);
@@ -131,6 +203,10 @@ body {
   border-radius: 8px;
   background: #eee;
   flex-shrink: 0;
+}
+.tarjeta-info {
+  flex: 1;
+  min-width: 0;
 }
 .tarjeta-info h3 {
   margin: 0 0 0.2rem;
@@ -145,6 +221,21 @@ body {
   color: var(--gris);
   margin: 0.2rem 0 0;
 }
+.tarjeta .precio {
+  font-weight: 700;
+  color: var(--verde-oscuro);
+  font-size: 0.9rem;
+}
+.tarjeta .fav {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  font-size: 1.2rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  line-height: 1;
+}
 .badges {
   margin-top: 0.3rem;
   display: flex;
@@ -158,6 +249,14 @@ body {
   background: var(--verde-claro);
   color: var(--verde-oscuro);
   font-weight: 600;
+}
+.badge.dist {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+.badge.cat {
+  background: #f3e5f5;
+  color: #6a1b9a;
 }
 .vacio {
   text-align: center;
@@ -201,6 +300,9 @@ body {
   padding: 1.5rem;
   position: relative;
 }
+.modal-chico {
+  max-width: 420px;
+}
 .modal-cerrar {
   position: absolute;
   top: 0.7rem;
@@ -214,7 +316,8 @@ body {
 }
 
 /* ---------- Formulario ---------- */
-.form h2 {
+.form h2,
+.form h3 {
   margin: 0 0 1rem;
   color: var(--verde-oscuro);
 }
@@ -224,7 +327,16 @@ body {
   font-size: 0.9rem;
   font-weight: 600;
 }
+.fila {
+  display: flex;
+  gap: 0.8rem;
+}
+.fila label {
+  flex: 1;
+}
 .form input[type="text"],
+.form input[type="number"],
+.form input[type="date"],
 .form input[type="file"],
 .form textarea,
 .form select {
@@ -274,6 +386,11 @@ body {
   justify-content: flex-end;
   gap: 0.6rem;
 }
+.form-evento {
+  border-top: 1px solid var(--borde);
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
 
 /* ---------- Detalle ---------- */
 .detalle.oculto,
@@ -296,6 +413,11 @@ body {
   color: #f5a623;
   font-size: 1.1rem;
 }
+.detalle .precio-grande {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--verde-oscuro);
+}
 .detalle .bloque {
   margin: 0.8rem 0;
 }
@@ -311,6 +433,72 @@ body {
   color: #8a6d00;
   cursor: pointer;
   font-weight: 600;
+}
+.compartir {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 0.8rem 0;
+}
+.compartir button {
+  flex: 1;
+  min-width: 120px;
+  padding: 0.6rem;
+  border-radius: 8px;
+  border: 1px solid var(--borde);
+  background: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+.compartir button.wa {
+  background: #25d366;
+  color: #fff;
+  border-color: #25d366;
+}
+.alarma {
+  background: #f1f8e9;
+  border: 1px solid #c5e1a5;
+  border-radius: 10px;
+  padding: 0.8rem;
+  margin: 0.8rem 0;
+}
+.alarma input {
+  padding: 0.5rem;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  width: 120px;
+}
+
+/* ---------- Eventos ---------- */
+.lista-eventos {
+  margin-bottom: 1rem;
+}
+.evento {
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: 0.8rem;
+  margin-bottom: 0.6rem;
+}
+.evento h4 {
+  margin: 0 0 0.3rem;
+}
+.evento .meta {
+  font-size: 0.82rem;
+  color: var(--gris);
+}
+.evento .acciones {
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+}
+.evento .acciones button {
+  font-size: 0.78rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid var(--borde);
+  background: #fff;
+  cursor: pointer;
 }
 
 /* ---------- Pie ---------- */
@@ -332,5 +520,9 @@ body {
   }
   .tagline {
     display: none;
+  }
+  .fila {
+    flex-direction: column;
+    gap: 0;
   }
 }

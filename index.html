@@ -21,20 +21,36 @@
         <p class="tagline">Opina, descubre y mapea productos — desde una galleta hasta lo que sea.</p>
       </div>
     </div>
-    <button id="btn-nuevo" class="btn btn-primary">+ Agregar producto</button>
+    <div class="topbar-acciones">
+      <div id="perfil" class="perfil"></div>
+      <button id="btn-nuevo" class="btn btn-primary">+ Agregar producto</button>
+    </div>
   </header>
+
+  <!-- Pestañas / filtros -->
+  <nav class="tabs">
+    <button class="tab activa" data-tab="todos">🌎 Todos</button>
+    <button class="tab" data-tab="favoritos">❤️ Favoritos</button>
+    <button class="tab" data-tab="cerca">📍 Cerca de mí</button>
+    <button class="tab" data-tab="caseta">🎪 Mi caseta</button>
+    <span class="tabs-sep"></span>
+    <button id="btn-ruta" class="tab tab-accion">🗺️ Ruta de fin de semana</button>
+    <button id="btn-eventos" class="tab tab-accion">📅 Eventos de cata</button>
+    <button id="btn-invitar" class="tab tab-accion">🤝 Invitar amigos</button>
+  </nav>
 
   <main class="layout">
     <!-- Columna izquierda: lista de productos -->
     <section class="panel lista-panel">
       <div class="panel-head">
-        <h2>Productos</h2>
+        <h2 id="lista-titulo">Productos</h2>
         <input
           id="buscar"
           type="search"
           placeholder="Buscar (ej: galleta, café...)"
         />
       </div>
+      <div id="aviso-precio" class="aviso-precio oculto"></div>
       <div id="lista" class="lista"></div>
     </section>
 
@@ -44,10 +60,10 @@
     </section>
   </main>
 
-  <!-- Ventana para agregar / ver un producto -->
+  <!-- ============ Modal: Agregar / ver producto ============ -->
   <div id="modal" class="modal oculto">
     <div class="modal-caja">
-      <button class="modal-cerrar" id="modal-cerrar">×</button>
+      <button class="modal-cerrar" data-cerrar>×</button>
 
       <!-- Formulario para agregar -->
       <form id="form" class="form">
@@ -59,20 +75,39 @@
         </label>
 
         <label>
+          Categoría
+          <select name="categoria">
+            <option>Comida</option>
+            <option>Bebida</option>
+            <option>Postre</option>
+            <option>Artesanía</option>
+            <option>Tecnología</option>
+            <option>Ropa</option>
+            <option>Otro</option>
+          </select>
+        </label>
+
+        <label>
           Tu opinión
           <textarea name="opinion" rows="3" required placeholder="¿Qué tal está? ¿Por qué te gustó o no?"></textarea>
         </label>
 
-        <label>
-          Calificación
-          <select name="calificacion" required>
-            <option value="5">★★★★★ — Excelente</option>
-            <option value="4">★★★★ — Muy bueno</option>
-            <option value="3">★★★ — Aceptable</option>
-            <option value="2">★★ — Malo</option>
-            <option value="1">★ — Pésimo</option>
-          </select>
-        </label>
+        <div class="fila">
+          <label>
+            Calificación
+            <select name="calificacion" required>
+              <option value="5">★★★★★ — Excelente</option>
+              <option value="4">★★★★ — Muy bueno</option>
+              <option value="3">★★★ — Aceptable</option>
+              <option value="2">★★ — Malo</option>
+              <option value="1">★ — Pésimo</option>
+            </select>
+          </label>
+          <label>
+            Precio (opcional)
+            <input name="precio" type="number" min="0" step="0.01" placeholder="Ej: 2.50" />
+          </label>
+        </div>
 
         <label>
           Foto del producto
@@ -103,13 +138,65 @@
         </fieldset>
 
         <div class="form-acciones">
-          <button type="button" class="btn" id="cancelar">Cancelar</button>
+          <button type="button" class="btn" data-cerrar>Cancelar</button>
           <button type="submit" class="btn btn-primary">Publicar opinión</button>
         </div>
       </form>
 
       <!-- Vista de detalle de un producto -->
       <div id="detalle" class="detalle oculto"></div>
+    </div>
+  </div>
+
+  <!-- ============ Modal: Perfil / usuario ============ -->
+  <div id="modal-perfil" class="modal oculto">
+    <div class="modal-caja modal-chico">
+      <button class="modal-cerrar" data-cerrar>×</button>
+      <h2>👤 Tu perfil</h2>
+      <p class="ayuda">Crea tu usuario para tener tu propia caseta e invitar amigos.</p>
+      <form id="form-perfil" class="form">
+        <label>
+          Tu nombre o apodo
+          <input name="nombre" type="text" required placeholder="Ej: Isaac" />
+        </label>
+        <label>
+          Nombre de tu caseta (opcional)
+          <input name="caseta" type="text" placeholder="Ej: Las delicias de Isaac" />
+        </label>
+        <div class="form-acciones">
+          <button type="submit" class="btn btn-primary">Guardar perfil</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============ Modal: Eventos de cata ============ -->
+  <div id="modal-eventos" class="modal oculto">
+    <div class="modal-caja">
+      <button class="modal-cerrar" data-cerrar>×</button>
+      <h2>📅 Eventos de cata</h2>
+      <p class="ayuda">Encuentros para probar productos. Crea uno e invita amigos.</p>
+      <div id="lista-eventos" class="lista-eventos"></div>
+      <form id="form-evento" class="form form-evento">
+        <h3>Crear evento</h3>
+        <label>
+          Nombre del evento
+          <input name="nombre" type="text" required placeholder="Ej: Cata de galletas del barrio" />
+        </label>
+        <div class="fila">
+          <label>
+            Fecha
+            <input name="fecha" type="date" required />
+          </label>
+          <label>
+            Lugar
+            <input name="lugar" type="text" required placeholder="Ej: Parque central" />
+          </label>
+        </div>
+        <div class="form-acciones">
+          <button type="submit" class="btn btn-primary">Crear evento</button>
+        </div>
+      </form>
     </div>
   </div>
 
