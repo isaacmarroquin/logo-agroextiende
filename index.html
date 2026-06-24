@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cátalo — Opina y descubre productos en el mundo</title>
+
+  <!-- Mapa: Leaflet + OpenStreetMap (gratis, sin clave) -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo-dot">🍪</span>
+      <div>
+        <h1>Cátalo</h1>
+        <p class="tagline">Opina, descubre y mapea productos — desde una galleta hasta lo que sea.</p>
+      </div>
+    </div>
+    <button id="btn-nuevo" class="btn btn-primary">+ Agregar producto</button>
+  </header>
+
+  <main class="layout">
+    <!-- Columna izquierda: lista de productos -->
+    <section class="panel lista-panel">
+      <div class="panel-head">
+        <h2>Productos</h2>
+        <input
+          id="buscar"
+          type="search"
+          placeholder="Buscar (ej: galleta, café...)"
+        />
+      </div>
+      <div id="lista" class="lista"></div>
+    </section>
+
+    <!-- Columna derecha: mapa -->
+    <section class="panel mapa-panel">
+      <div id="mapa"></div>
+    </section>
+  </main>
+
+  <!-- Ventana para agregar / ver un producto -->
+  <div id="modal" class="modal oculto">
+    <div class="modal-caja">
+      <button class="modal-cerrar" id="modal-cerrar">×</button>
+
+      <!-- Formulario para agregar -->
+      <form id="form" class="form">
+        <h2>Agregar un producto</h2>
+
+        <label>
+          ¿Qué producto es?
+          <input name="nombre" type="text" required placeholder="Ej: Galleta de avena casera" />
+        </label>
+
+        <label>
+          Tu opinión
+          <textarea name="opinion" rows="3" required placeholder="¿Qué tal está? ¿Por qué te gustó o no?"></textarea>
+        </label>
+
+        <label>
+          Calificación
+          <select name="calificacion" required>
+            <option value="5">★★★★★ — Excelente</option>
+            <option value="4">★★★★ — Muy bueno</option>
+            <option value="3">★★★ — Aceptable</option>
+            <option value="2">★★ — Malo</option>
+            <option value="1">★ — Pésimo</option>
+          </select>
+        </label>
+
+        <label>
+          Foto del producto
+          <input name="foto" type="file" accept="image/*" />
+        </label>
+
+        <fieldset class="ubicacion">
+          <legend>¿Dónde lo encuentras?</legend>
+          <p class="ayuda">Haz clic en el mapa para marcar el lugar, o escribe una referencia.</p>
+          <input name="lugar" type="text" placeholder="Ej: Mercado central, calle 5" />
+          <div class="coords">
+            <span id="coords-texto">Sin ubicación marcada</span>
+          </div>
+        </fieldset>
+
+        <!-- Funciones premium (de pago) -->
+        <fieldset class="premium">
+          <legend>Extras premium 💳</legend>
+          <p class="ayuda">Opinar es gratis. Estas funciones tienen un costo:</p>
+          <label class="check">
+            <input type="checkbox" name="linkCompra" />
+            Agregar un <b>link para comprar</b> (de pago)
+          </label>
+          <label class="check">
+            <input type="checkbox" name="envio" />
+            Ofrecer <b>envío a domicilio</b> (de pago)
+          </label>
+        </fieldset>
+
+        <div class="form-acciones">
+          <button type="button" class="btn" id="cancelar">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Publicar opinión</button>
+        </div>
+      </form>
+
+      <!-- Vista de detalle de un producto -->
+      <div id="detalle" class="detalle oculto"></div>
+    </div>
+  </div>
+
+  <footer class="pie">
+    <p>Hecho con cariño · Los datos se guardan en tu navegador (versión de demostración).</p>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
